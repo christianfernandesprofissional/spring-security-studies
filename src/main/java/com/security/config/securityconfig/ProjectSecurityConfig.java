@@ -34,8 +34,10 @@ public class ProjectSecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(DataSource dataSource){ // DataSource foi adicionado para implementação do banco de dados
+    //Como nós implementamos a classe EazyBankUserDetailsService, ela já vai retornar um UserDetails, por isso o metodo abaixo não é mais necessário
+    //já que já temos uma implementação que implementa UserDetailsService e já vai buscar o usuário para nós
+   // @Bean
+   // public UserDetailsService userDetailsService(DataSource dataSource){ // DataSource foi adicionado para implementação do banco de dados
         // -----GRAVAÇÃO DE USUÁRIO SOMENTE NA MEMÓRIA---------
         // Essa classe User já é padrão do Spring Security e ela implementa a interface UserDetails
         //UserDetails user = User.withUsername("user").password("{noop}12345").authorities("read").build();
@@ -50,8 +52,8 @@ public class ProjectSecurityConfig {
         // -----GRAVAÇÃO DE USUÁRIO NO BANCO DE DADOS---------
         //As operações SQL são feitas automaticamente pelo SpringSecurity, em uma tabela padrão
         //que contem username, password e enabled
-        return new JdbcUserDetailsManager(dataSource); // O próprio Spring cuida de trazer esta dataSource
-    }
+     //   return new JdbcUserDetailsManager(dataSource); // O próprio Spring cuida de trazer esta dataSource
+    //}
 
     @Bean
     public PasswordEncoder passwordEncoder(){
