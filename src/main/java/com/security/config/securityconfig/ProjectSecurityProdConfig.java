@@ -1,28 +1,20 @@
 package com.security.config.securityconfig;
 
-import com.security.exceptionHandling.CustomBasicAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
-import javax.sql.DataSource;
-
 @Configuration
-@Profile("!prod")
-public class ProjectSecurityConfig {
+@Profile("prod")
+public class ProjectSecurityProdConfig {
 
 
     @Bean
@@ -30,15 +22,14 @@ public class ProjectSecurityConfig {
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().permitAll()); //dessa maneira todas as requisições não terão segurança
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().denyAll()); //dessa maneira todas as requisições serão negadas com erro 403
         //Por padrão, através da proteção csrf, toda a operação que altere dados é protegida pelo Spring Security mesmo com o endpoint estando permitido
-        http  .redirectToHttps((https) -> https.disable()) // Only HTTP Config
-              //  .redirectToHttps((https) -> https.requestMatchers(AnyRequestMatcher.INSTANCE)) // Only HTTPS Config, Porque por padrão o spring permite HTTP e HTTPS, para que o somente seja permitido HTTPS deve-se configurar explicitamente
+        http  //.redirectToHttps((https) -> https.disable()) // Only HTTP Config
+                .redirectToHttps((https) -> https.requestMatchers(AnyRequestMatcher.INSTANCE)) // Only HTTPS Config, Porque por padrão o spring permite HTTP e HTTPS, para que o somente seja permitido HTTPS deve-se configurar explicitamente
                 .csrf(csrfConfig -> csrfConfig.disable())// desabilitar o csrf para poder fazer metodos posts (depois irei configurar o csrf para aceitar os metodos posts)
                 .authorizeHttpRequests((requests) -> requests.requestMatchers("/myAccount", "/myBalance", "/myLoans", "/mycards").authenticated() //páginas que eu quero que sejam autenticadas
                 .requestMatchers("/notices", "/contact", "/error", "/register").permitAll()); //paginas permitidas; A página /error tbm é protegida por padrão, por isso precisamos permitir ela.
         //http.formLogin(Customizer.withDefaults());
         http.formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer.disable()); //desabilitando a tela padrão de login
-        http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint())); //Agora quando houver um erro de autenticação, nossa classe customizada ira tratar o erro
-        //http.httpBasic(Customizer.withDefaults()); // Este metodo irá tratar erro de autenticação da forma padrão (codigo 401) do Spring Security fazendo com que o navegador gere um popup de login básico caso o formLogin não esteja habilitado
+        http.httpBasic(Customizer.withDefaults()); // Este metodo irá mostra um login básico gerado pelo proprio navegador, que faz um pequeno formulario em forma de popup
         //http.httpBasic(httpBasicConfigurer -> httpBasicConfigurer.disable()); // Desabilitando esse popup basico, receberemos uma error page
         return http.build();
     }
