@@ -1,5 +1,6 @@
 package com.security.config.securityconfig;
 
+import com.security.exceptionHandling.CustomAccessDeniedHandler;
 import com.security.exceptionHandling.CustomBasicAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,16 +31,23 @@ public class ProjectSecurityConfig {
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().permitAll()); //dessa maneira todas as requisições não terão segurança
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().denyAll()); //dessa maneira todas as requisições serão negadas com erro 403
         //Por padrão, através da proteção csrf, toda a operação que altere dados é protegida pelo Spring Security mesmo com o endpoint estando permitido
-        http  .redirectToHttps((https) -> https.disable()) // Only HTTP Config
+        http
+                                                                                                        //número máximo de sessões que um usuário pode ter ao mesmo tempo e configuração para prevenir que o usuário consiga fazer login novamente caso o número maximo de sessoes seja atingido, caso 'false' (default) o Spring só vai invalidar as sessoes mais antigas
+                .sessionManagement(smc -> smc.invalidSessionUrl("/invalidSession").maximumSessions(2).maxSessionsPreventsLogin(true).expiredUrl("/paginaDeSessaoExpiradaCasoONumeroMaximoDeSessoesSejaAtingido")) //Caminho para a página com sessão inválida, para ser mais agradavel para o usuário, do que ser sempre redirecionado para o login sempre que a sessão expira, não se esqueça de permitir essa página
+                .redirectToHttps((https) -> https.disable()) // Only HTTP Config
               //  .redirectToHttps((https) -> https.requestMatchers(AnyRequestMatcher.INSTANCE)) // Only HTTPS Config, Porque por padrão o spring permite HTTP e HTTPS, para que o somente seja permitido HTTPS deve-se configurar explicitamente
                 .csrf(csrfConfig -> csrfConfig.disable())// desabilitar o csrf para poder fazer metodos posts (depois irei configurar o csrf para aceitar os metodos posts)
                 .authorizeHttpRequests((requests) -> requests.requestMatchers("/myAccount", "/myBalance", "/myLoans", "/mycards").authenticated() //páginas que eu quero que sejam autenticadas
-                .requestMatchers("/notices", "/contact", "/error", "/register").permitAll()); //paginas permitidas; A página /error tbm é protegida por padrão, por isso precisamos permitir ela.
+                .requestMatchers("/notices", "/contact", "/error", "/register", "/invalidSession").permitAll()); //paginas permitidas; A página /error tbm é protegida por padrão, por isso precisamos permitir ela.
         //http.formLogin(Customizer.withDefaults());
         http.formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer.disable()); //desabilitando a tela padrão de login
-        http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint())); //Agora quando houver um erro de autenticação, nossa classe customizada ira tratar o erro
+
+        http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint())); //Agora quando houver um erro de autenticação, nossa classe customizada ira tratar o erro isso somente para o basic HTTP
+        //http.exceptionHandling(ehc -> ehc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint())); // Mesma configuração acima, só que de outra forma, e agora é uma configuração global ou seja, vale tanto para o HTTP basic, quanto para JWT, OAuth2 etc
+        http.exceptionHandling(ehc -> ehc.accessDeniedHandler(new CustomAccessDeniedHandler()).accessDeniedPage("/denied"));//Customização de acesso negado. O metodo accessDeniedPage é para voce redirecionar o usuário para outra pagina de acesso negado caso a aplicação tenha uma página dessa
         //http.httpBasic(Customizer.withDefaults()); // Este metodo irá tratar erro de autenticação da forma padrão (codigo 401) do Spring Security fazendo com que o navegador gere um popup de login básico caso o formLogin não esteja habilitado
         //http.httpBasic(httpBasicConfigurer -> httpBasicConfigurer.disable()); // Desabilitando esse popup basico, receberemos uma error page
+
         return http.build();
     }
 
