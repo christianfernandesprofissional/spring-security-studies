@@ -31,8 +31,10 @@ public class ProjectSecurityConfig {
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().permitAll()); //dessa maneira todas as requisições não terão segurança
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().denyAll()); //dessa maneira todas as requisições serão negadas com erro 403
         //Por padrão, através da proteção csrf, toda a operação que altere dados é protegida pelo Spring Security mesmo com o endpoint estando permitido
+
+        //smc.sessionManagement(smc -> smc.sessionFixation(sfc -> sfc.migrateSession()) <- Opção para uma estratégia de prevenção de "roubo de sessão" do usuário (session fixation attack), existem 3 estratégias padrão no Spring Security: changeSessionId, newSession, migrateSession e a opção none mas não é recomendado, o Spring Security recomenda o uso do changeSessionId
         http
-                                                                                                        //número máximo de sessões que um usuário pode ter ao mesmo tempo e configuração para prevenir que o usuário consiga fazer login novamente caso o número maximo de sessoes seja atingido, caso 'false' (default) o Spring só vai invalidar as sessoes mais antigas
+
                 .sessionManagement(smc -> smc.invalidSessionUrl("/invalidSession").maximumSessions(2).maxSessionsPreventsLogin(true).expiredUrl("/paginaDeSessaoExpiradaCasoONumeroMaximoDeSessoesSejaAtingido")) //Caminho para a página com sessão inválida, para ser mais agradavel para o usuário, do que ser sempre redirecionado para o login sempre que a sessão expira, não se esqueça de permitir essa página
                 .redirectToHttps((https) -> https.disable()) // Only HTTP Config
               //  .redirectToHttps((https) -> https.requestMatchers(AnyRequestMatcher.INSTANCE)) // Only HTTPS Config, Porque por padrão o spring permite HTTP e HTTPS, para que o somente seja permitido HTTPS deve-se configurar explicitamente
